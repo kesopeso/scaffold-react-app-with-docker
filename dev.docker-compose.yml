@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+    react-node:
+        user: "${HOST_USER_ID}:${HOST_GROUP_ID}"
+        ports:
+            - 3000:3000
+        volumes:
+            - "${HOST_NODE_APP_FOLDER}:${DOCKER_NODE_APP_FOLDER}"
+        command: npm start

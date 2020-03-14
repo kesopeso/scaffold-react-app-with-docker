@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+    react-node:
+        image: react-node:latest
+        build:
+            context: "${HOST_NODE_APP_FOLDER}"
+            dockerfile: "${PROJECT_FOLDER}/node.dockerfile"
+            args:
+                APP_FOLDER: "$DOCKER_NODE_APP_FOLDER"
+
+        container_name: react-node

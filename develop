@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+set -e
+
+export HOST_USER_ID=${HOST_USER_ID:-`id -u`}
+export HOST_GROUP_ID=${HOST_GROUP_ID:-`id -g`}
+
+DEV_COMPOSE_FILE="dev.docker-compose.yml"
+NODE_COMPOSE_FILE="node.docker-compose.yml"
+
+COMPOSE="docker-compose"
+DEV_COMPOSE="$COMPOSE -f $NODE_COMPOSE_FILE -f $DEV_COMPOSE_FILE"
+NODE_COMPOSE="$COMPOSE -f $NODE_COMPOSE_FILE"
+
+export PROJECT_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export HOST_NODE_APP_FOLDER=${HOST_NODE_APP_FOLDER:-"${PROJECT_FOLDER}/app"}
+export DOCKER_NODE_APP_FOLDER=${DOCKER_NODE_APP_FOLDER:-"/app"}
+
+NODE_COMPOSE_RUN="$NODE_COMPOSE run \
+        --rm \
+        --name react-node-runner \
+        --user ${HOST_USER_ID}:${HOST_GROUP_ID} \
+        --volume ${HOST_NODE_APP_FOLDER}:${DOCKER_NODE_APP_FOLDER} \
+        react-node"
+
+if [ $# -gt 0 ]; then
+    COMMAND=$1
+    shift 1
+
+    if [ $COMMAND == "create-app" ]; then
+        mkdir $HOST_NODE_APP_FOLDER
+        $NODE_COMPOSE_RUN npx create-react-app . --template typescript
+    elif [ $COMMAND == "start" ]; then
+        $DEV_COMPOSE up -d
+    elif [ $COMMAND == "stop" ]; then
+        $DEV_COMPOSE down
+    elif [ $COMMAND == "exec" ]; then
+        $DEV_COMPOSE exec "$@"
+    elif [ $COMMAND == "npm" ]; then
+        $NODE_COMPOSE_RUN npm "$@"
+    else
+        $DEV_COMPOSE $COMMAND "$@"
+    fi
+else
+    $DEV_COMPOSE ps
+fi
